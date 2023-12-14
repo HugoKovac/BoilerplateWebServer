@@ -1,5 +1,5 @@
 import transporter from "$lib/emailSetup.server"
-import {GOOGLE_EMAIL} from '$env/static/private'
+import {GOOGLE_EMAIL, BASE_URL} from '$env/static/private'
 import { createJWT, verifyAuthJWT } from "$lib/jwt.server"
 import { redirect } from "@sveltejs/kit"
 import {z} from "zod"
@@ -58,7 +58,7 @@ export const actions = {
                     to: user.email,
                     subject: "Reset your password",
                     body: "Reset your password",
-                    html: `<a href="http://localhost:3000/forgot/${reset_token}">Click here to reset your password</a>`
+                    html: `<a href="${BASE_URL}/forgot/${reset_token}">Click here to reset your password</a>`
                 }
                 
                 const sendMail = async (message) => {
