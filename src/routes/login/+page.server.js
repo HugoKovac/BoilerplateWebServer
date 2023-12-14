@@ -3,6 +3,7 @@ import {db} from '$lib/db.server'
 import { fail, redirect } from "@sveltejs/kit";
 import bcrypt from "bcrypt";
 import {createJWT, verifyAuthJWT} from "$lib/jwt.server";
+import {HOSTNAME} from '$env/static/private'
 import {z} from "zod";
 
 export async function load({params, cookies}){
@@ -74,7 +75,7 @@ export const actions = {
 			role: user.role,
 		})
 
-		event.cookies.set("auth", jwt, {path: "/"})
+		event.cookies.set("auth", jwt, {path: "/", domain: HOSTNAME})
 
 		throw redirect(301, "/")
 	}
