@@ -1,5 +1,5 @@
 import transporter from "$lib/emailSetup.server"
-import {GOOGLE_EMAIL} from '$env/static/private'
+import {GOOGLE_EMAIL, BASE_URL} from '$env/static/private'
 import { createJWT, verifyAuthJWT } from "$lib/jwt.server"
 import { redirect } from "@sveltejs/kit"
 
@@ -21,7 +21,7 @@ export const actions = {
                 to: event.locals.user.email,
                 subject: "Verify your email",
                 body: "Verify your email",
-                html: `<a href="http://localhost:3000/verify/${verify_token}">Click here to verify your email</a>`
+                html: `<a href="${BASE_URL}/verify/${verify_token}">Click here to verify your email</a>`
             }
             
             const sendMail = async (message) => {
