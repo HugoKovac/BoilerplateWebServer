@@ -10,12 +10,11 @@ export default defineConfig(({ mode }) => {
 		plugins: [sveltekit(), purgeCss()],
 		server: {
 			proxy: {
-				'/api': {
-					target: env.VITE_API_BASE_URL,
+				'/dev': {
+					target: 'http://localhost:3000',
 					changeOrigin: true,
-					secure: false,
-					agent: new http.Agent()
-				}
+					rewrite: (path) => path.replace(/^\/dev/, ''),
+				},
 			}
 		}
 	}
