@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => {
 		server: {
 			proxy: {
 				'/dev': {
-					target: 'http://localhost:3000',
+					target: 'http://web_dev:3000',
 					changeOrigin: true,
 					rewrite: (path) => path.replace(/^\/dev/, ''),
 				},
