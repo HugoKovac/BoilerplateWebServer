@@ -3,7 +3,7 @@ import {db} from '$lib/db.server'
 import { fail, redirect } from "@sveltejs/kit";
 import bcrypt from "bcrypt";
 import {createJWT, verifyAuthJWT} from "$lib/jwt.server";
-import {HOSTNAME} from '$env/static/private'
+import {HOSTNAME, DEV} from '$env/static/private'
 import {z} from "zod";
 
 export async function load({params, cookies}){
@@ -52,6 +52,17 @@ export const actions = {
 				email: data.email
 			}
 		})
+
+		if (!user){
+			console.log("User doesn't exist")
+			const {password, ...rest} = data;
+			return {
+				data: rest,
+				errors: {
+					invalid: "Invalid email or password"
+				}
+			}
+		}
 		
 		const result = await bcrypt.compare(data.password, user.password)
 
@@ -75,7 +86,7 @@ export const actions = {
 			role: user.role,
 		})
 
-		event.cookies.set("auth", jwt, {path: "/", domain: HOSTNAME})
+		event.cookies.set("auth", jwt, {path: "/", secure: (DEV === 'false' ? true : false)})
 
 		throw redirect(301, "/")
 	}
