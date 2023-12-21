@@ -1,6 +1,6 @@
 import { verifyAuthJWT, createJWT } from "$lib/jwt.server";
 import { redirect } from "@sveltejs/kit";
-import {db} from '$lib/db.server'
+import {db} from '$lib/server/prisma'
 import bcrypt from "bcrypt";
 import {z} from "zod";
 
@@ -123,7 +123,7 @@ export const actions = {
             role: user.role,
         })
 
-        event.cookies.set("auth", jwt, {path: "/"})
+        event.cookies.set("session_token", jwt, {path: "/"})
 
         throw redirect(301, "/")
 

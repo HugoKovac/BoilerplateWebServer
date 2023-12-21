@@ -1,7 +1,8 @@
-export function load(event){
+export async function load(event){
     let avatar_letters = ""
-    if (event.locals.user){
-        avatar_letters = event.locals.user.first_name[0] + event.locals.user.surname[0]
+    const session = await event.locals.auth.validate()
+    if (session && session.user){
+        avatar_letters = session.user.first_name[0] + session.user.surname[0]
     }
 
     const display_log_btn = (event.url.pathname.startsWith('/register') || event.url.pathname.startsWith('/login'));

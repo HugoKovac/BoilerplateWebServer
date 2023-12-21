@@ -1,14 +1,14 @@
 import {redirect} from "@sveltejs/kit"
 import {z} from "zod"
-import {verifyAuthJWT, createJWT} from "$lib/jwt.server"
-import {db} from "$lib/db.server"
+import {db} from "$lib/server/prisma"
 
-export function load({ locals }) {
-    if (!locals.user){
+export async function load({ locals }) {
+    const session = await locals.auth.validate()
+    if (!session.user){
         throw redirect(303, "/login")
     }
     return {
-        user: locals.user
+        user: session.user
     }
 
 }
@@ -92,16 +92,13 @@ const editSchema = z.object({
 
 export const actions = {
     default: async (event) => {
-        const token = event.cookies.get('auth')
-        console.log()
-		const payload = await verifyAuthJWT(token)
-		if (!payload){
+        const session = await event.locals.auth.validate()
+		if (!session){
 			throw redirect(303, "/login")
 		}
 		
 
 		const data = Object.fromEntries(await event.request.formData());
-        console.log(data)
 		try{
 			editSchema.parse(data)
 		}
@@ -138,11 +135,9 @@ export const actions = {
 
         const user = await db.user.findUnique({
             where: {
-                id: payload.id
+                id: session.user.userId
             }
         })
-
-        console.log(user)
 
         if (data.firstname){
             user.first_name = data.firstname
@@ -161,21 +156,10 @@ export const actions = {
 
         const new_user = await db.user.update({
             where: {
-                id: payload.id
+                id: session.user.userId
             },
             data: user
         })
-
-        console.log(new_user)
-
-        const jwt = await createJWT({
-            first_name: new_user.first_name,
-            surname: new_user.surname,
-            email: new_user.email,
-            id: new_user.id,
-            role: new_user.role,
-        })
-        event.cookies.set("auth", jwt, { path: "/" })
 
         return {
             data: {

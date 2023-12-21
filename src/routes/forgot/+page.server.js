@@ -3,7 +3,7 @@ import {GOOGLE_EMAIL, BASE_URL} from '$env/static/private'
 import { createJWT, verifyAuthJWT } from "$lib/jwt.server"
 import { redirect } from "@sveltejs/kit"
 import {z} from "zod"
-import {db} from '$lib/db.server'
+import {db} from '$lib/server/prisma'
 
 export async function load({params, cookies}){
     const jwt = cookies.get('auth')

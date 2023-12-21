@@ -6,11 +6,11 @@ import { redirect } from "@sveltejs/kit"
 export const actions = {
     default: async (event) => {
         try{
-
+            const session = await event.locals.auth.validate()
             const verify_token = await createJWT({
-                id: event.locals.user.id,
-                email: event.locals.user.email,
-                role: event.locals.user.role,
+                id: session.user.userId,
+                email: session.user.email,
+                role: session.user.role,
                 verified: true
             }, "1h")
 
@@ -18,7 +18,7 @@ export const actions = {
 
             const message = {
                 from: GOOGLE_EMAIL,
-                to: event.locals.user.email,
+                to: session.user.email,
                 subject: "Verify your email",
                 body: "Verify your email",
                 html: `<a href="${BASE_URL}/verify/${verify_token}">Click here to verify your email</a>`
@@ -54,13 +54,12 @@ export const actions = {
     }
 }
 
-export async function load({cookies}){
-    const jwt = cookies.get("auth")
-    const payload = await verifyAuthJWT(jwt)
-    if (!payload){
+export async function load({locals}){
+    const session = await locals.auth.validate()
+    if (!session){
         throw redirect(303, "/login")
     }
-    else if (payload && payload.role !== "NOT_AUTHENTICATED"){  
+    else if (session.user && session.user.role !== "NOT_AUTHENTICATED"){
         throw redirect(301, "/")
     }
 }

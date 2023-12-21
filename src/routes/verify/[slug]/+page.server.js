@@ -1,6 +1,6 @@
 import { verifyAuthJWT, createJWT } from "$lib/jwt.server";
 import { redirect } from "@sveltejs/kit";
-import {db} from '$lib/db.server'
+import {db} from '$lib/server/prisma'
 
 export async function load({params, cookies}){
     const payload = await verifyAuthJWT(params.slug)
@@ -26,7 +26,7 @@ export async function load({params, cookies}){
             role: user.role,
         })
 
-        cookies.set("auth", jwt, {path: "/"})
+        cookies.set("session_token", jwt, {path: "/"})
 
         throw redirect(301, "/")
     }
