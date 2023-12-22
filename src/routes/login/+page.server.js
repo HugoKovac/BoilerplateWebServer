@@ -6,7 +6,6 @@ import { auth } from "$lib/server/lucia";
 
 export async function load({locals}){
     const session = await locals.auth.validate()
-	console.log(session)
     if (session){
         throw redirect(302, "/")
     }
@@ -42,12 +41,15 @@ export const actions = {
 
 		try{
 
-			const key = await auth.useKey("email", data.email, data.password)
+			const key = await auth.useKey("email", data.email.toLowerCase(), data.password)
 			const session = await auth.createSession({
 				userId: key.userId,
 				attributes: {}
 			});
 			event.locals.auth.setSession(session);
+			if (session.user.email_verified === false){
+				throw redirect(303, '/verify')
+			}
 		}
 		catch (err){
 			console.error(err)

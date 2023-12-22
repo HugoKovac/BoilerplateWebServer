@@ -19,10 +19,11 @@ model User {
   updated_at  DateTime @updatedAt
 
   email       String   @unique
+  email_verified  Boolean    @default(false)
   first_name  String
   surname     String
 
-  role        Role     @default(NOT_AUTHENTICATED)
+  role        Role     @default(USER)
 }
 
 model Session {
@@ -44,8 +45,15 @@ model Key {
   @@index([user_id])
 }
 
+model EmailVerificationToken {
+  id             String @id @unique
+  expires        BigInt
+  user_id        String
+
+  @@index([user_id])
+}
+
 enum Role {
-  NOT_AUTHENTICATED
   USER
   ADMIN
 }

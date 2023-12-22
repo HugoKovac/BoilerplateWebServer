@@ -130,13 +130,13 @@ export const actions = {
             const user = await auth.createUser({
                 key: {
                     providerId: "email",
-                    providerUserId: data.email,
+                    providerUserId: data.email.toLowerCase(),
                     password: data.password,
                 },
                 attributes: {
                     first_name: data.firstname,
                     surname: data.surname,
-                    email: data.email
+                    email: data.email.toLowerCase()
                 }
             })
             const session = await auth.createSession({

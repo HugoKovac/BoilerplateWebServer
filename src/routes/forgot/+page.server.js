@@ -5,10 +5,9 @@ import { redirect } from "@sveltejs/kit"
 import {z} from "zod"
 import {db} from '$lib/server/prisma'
 
-export async function load({params, cookies}){
-    const jwt = cookies.get('auth')
-    const payload = await verifyAuthJWT(jwt)
-    if (payload){
+export async function load({params, cookies, locals}){
+    const session = await locals.auth.validate()
+    if (session){
         throw redirect(303, "/")
     }
 }

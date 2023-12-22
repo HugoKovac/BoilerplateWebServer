@@ -104,26 +104,10 @@ export const actions = {
             }
         }
 
+        await auth.invalidateAllUserSessions(payload.id);
+		await auth.updateKeyPassword("email", payload.email, data.newpassword);
 
-        const newpassword = await bcrypt.hash(data.newpassword, 10)
-        const user = await db.user.update({
-            where: {
-                id: payload.id
-            },
-            data: {
-                password: newpassword
-            }
-        })
         
-        const jwt = await createJWT({
-            first_name: user.first_name,
-            surname: user.surname,
-            email: user.email,
-            id: user.id,
-            role: user.role,
-        })
-
-        event.cookies.set("session_token", jwt, {path: "/"})
 
         throw redirect(301, "/")
 
