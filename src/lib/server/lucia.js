@@ -1,6 +1,6 @@
 import { lucia } from "lucia";
 import { prisma } from "@lucia-auth/adapter-prisma";
-import { dev } from '$app/environment'
+import { DEV } from "$env/static/private";
 import { node, sveltekit } from "lucia/middleware";
 import { db } from '$lib/server/prisma'
 
@@ -10,8 +10,8 @@ export const auth = lucia({
 		key: "key", // model Key {}
 		session: "session" // model Session {}
 	}),
-	env: dev ? 'DEV' : 'PROD',
-	middleware: dev ? sveltekit() : node(),
+	env: DEV ? 'DEV' : 'PROD',
+	middleware: DEV ? sveltekit() : node(),
 	getUserAttributes: (userData) => {
 		return {
 			userId: userData.id,
