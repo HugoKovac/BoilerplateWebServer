@@ -1,6 +1,5 @@
 import { redirect } from "@sveltejs/kit";
 import { db } from '$lib/server/prisma'
-import bcrypt from "bcrypt";
 import { z } from "zod";
 import { auth } from "$lib/server/lucia";
 import { validatePasswordResetToken } from "$lib/server/token";
