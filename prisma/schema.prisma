@@ -53,6 +53,14 @@ model EmailVerificationToken {
   @@index([user_id])
 }
 
+model PasswordResetToken{
+  id             String @id @unique
+  expires        BigInt
+  user_id        String
+
+  @@index([user_id])
+}
+
 enum Role {
   USER
   ADMIN

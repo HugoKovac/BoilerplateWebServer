@@ -17,13 +17,16 @@ export async function load({params, cookies}){
 			attributes: {}
 		});
 		const sessionCookie = auth.createSessionCookie(session);
-		throw redirect(303, "/", {
-            headers: {
-                "Set-Cookie": sessionCookie
-            }
-        });
+		cookies.set(sessionCookie.name, sessionCookie.value, {
+			path: '/',
+			httpOnly: true,
+			sameSite: 'strict',
+			secure: !DEV,
+			maxAge: 60 * 60 * 24 * 30
+		});
 	} catch (err) {
         console.error(err)
         throw redirect(303, "/login");
 	}
+	throw redirect(302, "/");
 }
