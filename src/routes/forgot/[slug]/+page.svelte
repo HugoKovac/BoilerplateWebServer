@@ -1,16 +1,27 @@
 <script>
     export let form;
+    import { getToastStore } from '@skeletonlabs/skeleton';
+
+    const toastStore = getToastStore();
 
     let passwordPolicyError = '';
     $: {
         passwordPolicyError = 'Your password must contain at least:<br />'
-        if (form?.errors?.policy[0]) {
+        if (form?.errors?.policy) {
             Object.keys(form?.errors?.policy[0]).forEach((key) => {
                 if (!form?.errors?.policy[0][key].pass){
                     passwordPolicyError += `<span class="badge variant-filled-error">${form?.errors?.policy[0][key].message}</span><br />`
                 }
             })
         }
+    }
+
+    $: if (form?.errors?.token) {
+        console.log(form?.errors?.token);
+        toastStore.trigger({
+            message: form?.errors?.token,
+            background: 'variant-filled-error',
+        });
     }
 </script>
 
@@ -23,7 +34,7 @@
             <label class="label">
                 <span>New password</span>
                 <input form="verifyForm" name="newpassword" class={(form?.errors?.newpassword ? "input input-error" : "input")} type="password" placeholder="new password" />
-                {#if form?.errors?.policy[0]}
+                {#if form?.errors?.policy}
                 {@html passwordPolicyError}
                 {/if}
                 {#if form?.errors?.newpassword}
@@ -40,7 +51,7 @@
                 <span class="badge variant-filled-error">{form?.errors?.not_match}</span>
                 {/if}
             </label>
-            <button class="btn variant-ghost-primary mx-auto mt-10">Send mail</button>
+            <button class="btn variant-ghost-primary mx-auto mt-10">Reset</button>
         </form>
 	</div>
 </div>

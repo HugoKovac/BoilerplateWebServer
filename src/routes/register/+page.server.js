@@ -1,16 +1,25 @@
 import { fail, redirect } from "@sveltejs/kit";
-import { db } from "$lib/db.server";
+import { db } from "$lib/server/prisma";
 import bcrypt from "bcrypt";
 import { createJWT, verifyAuthJWT } from "$lib/jwt.server";
 import { z } from "zod";
+import { auth } from "$lib/server/lucia";
 
-export async function load({ params, cookies }) {
-    const jwt = cookies.get('auth')
-    const payload = await verifyAuthJWT(jwt)
-    if (payload) {
-        throw redirect(303, "/")
+// export async function load({ params, cookies }) {
+//     const jwt = cookies.get('auth')
+//     const payload = await verifyAuthJWT(jwt)
+//     if (payload) {
+//         throw redirect(303, "/")
+//     }
+// }
+
+export async function load({ locals }) {
+    const session = await locals.auth.validate()
+    if (session){
+        throw redirect(302, '/')
     }
 }
+
 
 const registerSchema = z.object({
     firstname: z.string({ required_error: "First name is required" })
@@ -92,7 +101,7 @@ export const actions = {
 
         try {
             const rtn = registerSchema.parse(data)
-            console.log(rtn)
+            // console.log(rtn)
         }
         catch (e) {
             const { fieldErrors: errors } = e.flatten();
@@ -115,25 +124,26 @@ export const actions = {
             }
         }
 
-        data.password = await bcrypt.hash(data.password.toString(), 10)
+        // data.password = await bcrypt.hash(data.password.toString(), 10)
 
         try {
-            const new_user = await db.user.create({
-                data: {
-                    email: data.email,
+            const user = await auth.createUser({
+                key: {
+                    providerId: "email",
+                    providerUserId: data.email.toLowerCase(),
+                    password: data.password,
+                },
+                attributes: {
                     first_name: data.firstname,
                     surname: data.surname,
-                    password: data.password,
+                    email: data.email.toLowerCase()
                 }
             })
-            const jwt = await createJWT({
-                first_name: new_user.first_name,
-                surname: new_user.surname,
-                email: new_user.email,
-                id: new_user.id,
-                role: new_user.role,
-            })
-            event.cookies.set("auth", jwt, { path: "/" })
+            const session = await auth.createSession({
+				userId: user.userId,
+				attributes: {}
+			});
+			event.locals.auth.setSession(session);
 
         }
         catch (err) {
@@ -146,6 +156,6 @@ export const actions = {
                 }
             }
         }
-        throw redirect(301, "/")
+        throw redirect(301, "/verify")
     }
 }

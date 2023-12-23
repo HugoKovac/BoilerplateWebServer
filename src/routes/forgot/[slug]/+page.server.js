@@ -1,24 +1,25 @@
-import { verifyAuthJWT, createJWT } from "$lib/jwt.server";
 import { redirect } from "@sveltejs/kit";
-import {db} from '$lib/db.server'
+import { db } from '$lib/server/prisma'
 import bcrypt from "bcrypt";
-import {z} from "zod";
+import { z } from "zod";
+import { auth } from "$lib/server/lucia";
+import { validatePasswordResetToken } from "$lib/server/token";
+import { DEV } from "$env/static/private";
 
-export async function load({params, cookies}){
-    const payload = await verifyAuthJWT(params.slug)
-    console.log(payload)
-    if (!payload || !payload.reset){
+export async function load({ locals }) {
+    const session = await locals.auth.validate()
+    if (session) {
         throw redirect(303, "/login")
     }
 }
 
 const forgetSchema = z.object({
-    newpassword: z.string({required_error: "New Password is required"})
-        .min(8, {message: "New Password should be minimum 8 characters"})
-        .max(64, {message: "New Password should be maximum 64 characters"}),
-    confirmnewpassword: z.string({required_error: "Confirm Password is required"})
-        .min(8, {message: "Confirm Password should be minimum 8 characters"})
-        .max(64, {message: "Confirm Password should be maximum 64 characters"})
+    newpassword: z.string({ required_error: "New Password is required" })
+        .min(8, { message: "New Password should be minimum 8 characters" })
+        .max(64, { message: "New Password should be maximum 64 characters" }),
+    confirmnewpassword: z.string({ required_error: "Confirm Password is required" })
+        .min(8, { message: "Confirm Password should be minimum 8 characters" })
+        .max(64, { message: "Confirm Password should be maximum 64 characters" })
 }).superRefine(({ newpassword }, checkPassComplexity) => {
     const containsUppercase = (ch) => /[A-Z]/.test(ch);
     const containsLowercase = (ch) => /[a-z]/.test(ch);
@@ -78,25 +79,19 @@ export const actions = {
     default: async (event) => {
         const data = Object.fromEntries(await event.request.formData());
 
-        try{
+        try {
             forgetSchema.parse(data)
         }
-        catch(e){
+        catch (e) {
             console.error(e)
-            const {fieldErrors: errors} = e.flatten();
+            const { fieldErrors: errors } = e.flatten();
             console.error(errors)
             return {
                 errors
             }
         }
 
-        const payload = await verifyAuthJWT(event.params.slug)
-        console.log(payload)
-        if (!payload || !payload.reset){
-            throw redirect(303, "/login")
-        }
-
-        if (data.newpassword !== data.confirmnewpassword){
+        if (data.newpassword !== data.confirmnewpassword) {
             return {
                 errors: {
                     not_match: "Passwords do not match"
@@ -104,30 +99,42 @@ export const actions = {
             }
         }
 
+        try {
+            const userId = await validatePasswordResetToken(event.params.slug);
+            let user = await auth.getUser(userId);
+            await auth.invalidateAllUserSessions(user.userId);
+            await auth.updateKeyPassword("email", user.email, data.newpassword);
 
-        const newpassword = await bcrypt.hash(data.newpassword, 10)
-        const user = await db.user.update({
-            where: {
-                id: payload.id
-            },
-            data: {
-                password: newpassword
+            console.log(user ? user : "No user found");
+            if (!user.email_verified) {
+                user = await auth.updateUserAttributes(user.userId, {
+                    email_verified: true
+                });
             }
-        })
-        
-        const jwt = await createJWT({
-            first_name: user.first_name,
-            surname: user.surname,
-            email: user.email,
-            id: user.id,
-            role: user.role,
-        })
 
-        event.cookies.set("auth", jwt, {path: "/"})
+            const session = await auth.createSession({
+                userId: user.userId,
+                attributes: {}
+            });
+            const sessionCookie = auth.createSessionCookie(session);
+            event.cookies.set(sessionCookie.name, sessionCookie.value, {
+                path: '/',
+                httpOnly: true,
+                sameSite: 'strict',
+                secure: !DEV,
+                maxAge: 60 * 60 * 24 * 30
+            });
+    
 
-        throw redirect(301, "/")
-
-
-        
+        } catch (e) {
+            console.error(e);
+            return {
+                errors: {
+                    token: e.message
+                }
+            }
+        }
+        throw redirect(303, "/");
     }
+
 }

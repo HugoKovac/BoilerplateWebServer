@@ -23,7 +23,7 @@
     let passwordPolicyError = '';
     $: {
         passwordPolicyError = 'Your password must contain at least:<br />'
-        if (form?.errors?.policy[0]) {
+        if (form?.errors?.policy && form?.errors?.policy[0]) {
             Object.keys(form?.errors?.policy[0]).forEach((key) => {
                 if (!form?.errors?.policy[0][key].pass){
                     passwordPolicyError += `<span class="badge variant-filled-error">${form?.errors?.policy[0][key].message}</span><br />`
@@ -64,7 +64,7 @@
                 <label class="label">
                     <span>Password</span>
                     <input form="registerForm" name="password" class={((form?.errors?.password || form?.errors?.not_match) ? "input input-error" : "input")} type="password" placeholder="password" />
-                    {#if form?.errors?.policy[0]}
+                    {#if form?.errors?.policy && form?.errors?.policy[0]}
                     {@html passwordPolicyError}
                     {/if}
                     {#if form?.errors?.password}

@@ -1,17 +1,10 @@
 import { verifyAuthJWT } from "$lib/jwt.server";
 import { redirect } from "@sveltejs/kit";
+import { auth } from "$lib/server/lucia";
 
-export async function handle({event, resolve}){
-    const jwt = event.cookies.get("auth")
+export const handle = async ({ event, resolve }) => {
+	// we can pass `event` because we used the SvelteKit middleware
+	event.locals.auth = auth.handleRequest(event);
 
-    const payload = await verifyAuthJWT(jwt)
-    if (payload && payload.role === "NOT_AUTHENTICATED" && !event.url.pathname.startsWith('/verify')){  
-        console.log("Not authenticated");
-        throw redirect(303, "/verify")
-    }
-    event.locals.user = payload;
-
-    const response = await resolve(event);
-
-    return response;
-}
+	return await resolve(event);
+};

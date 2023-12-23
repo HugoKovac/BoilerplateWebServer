@@ -3,12 +3,13 @@ import {GOOGLE_EMAIL, BASE_URL} from '$env/static/private'
 import { createJWT, verifyAuthJWT } from "$lib/jwt.server"
 import { redirect } from "@sveltejs/kit"
 import {z} from "zod"
-import {db} from '$lib/db.server'
+import {db} from '$lib/server/prisma'
+import {generatePasswordResetToken} from "$lib/server/token"
 
-export async function load({params, cookies}){
-    const jwt = cookies.get('auth')
-    const payload = await verifyAuthJWT(jwt)
-    if (payload){
+
+export async function load({params, cookies, locals}){
+    const session = await locals.auth.validate()
+    if (session){
         throw redirect(303, "/")
     }
 }
@@ -44,14 +45,17 @@ export const actions = {
                         email: data.email
                     }
                 })
-                const reset_token = await createJWT({
-                    id: user.id,
-                    email: user.email,
-                    role: user.role,
-                    reset: true
-                }, "1h")
-    
-                console.log(reset_token);
+                const session = await event.locals.auth.validate()
+
+                console.log(user)
+
+                if (!user){
+                    return {
+                        error: "Error sending email"
+                    }
+                }
+
+                const reset_token = await generatePasswordResetToken(user.id);
     
                 const message = {
                     from: GOOGLE_EMAIL,

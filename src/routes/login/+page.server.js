@@ -1,16 +1,13 @@
 /** @type {import('./$types').Actions} */
-import {db} from '$lib/db.server'
-import { fail, redirect } from "@sveltejs/kit";
-import bcrypt from "bcrypt";
-import {createJWT, verifyAuthJWT} from "$lib/jwt.server";
-import {HOSTNAME, DEV} from '$env/static/private'
+import {db} from '$lib/server/prisma'
+import { redirect } from "@sveltejs/kit";
 import {z} from "zod";
+import { auth } from "$lib/server/lucia";
 
-export async function load({params, cookies}){
-    const jwt = cookies.get('auth')
-    const payload = await verifyAuthJWT(jwt)
-    if (payload){
-        throw redirect(303, "/")
+export async function load({locals}){
+    const session = await locals.auth.validate()
+    if (session){
+        throw redirect(302, "/")
     }
 }
 
@@ -27,12 +24,6 @@ const loginSchema = z.object({
 
 export const actions = {
 	default: async (event) => {
-		const token = event.cookies.get('auth')
-		const payload = await verifyAuthJWT(token)
-		if (payload){
-			return { status: 200 }
-		}
-		
 
 		const data = Object.fromEntries(await event.request.formData());
 		try{
@@ -47,14 +38,21 @@ export const actions = {
 				errors
 			}
 		}
-		const user = await db.user.findUnique({
-			where: {
-				email: data.email
-			}
-		})
 
-		if (!user){
-			console.log("User doesn't exist")
+		try{
+
+			const key = await auth.useKey("email", data.email.toLowerCase(), data.password)
+			const session = await auth.createSession({
+				userId: key.userId,
+				attributes: {}
+			});
+			event.locals.auth.setSession(session);
+			if (session.user.email_verified === false){
+				throw redirect(303, '/verify')
+			}
+		}
+		catch (err){
+			console.error(err)
 			const {password, ...rest} = data;
 			return {
 				data: rest,
@@ -63,31 +61,7 @@ export const actions = {
 				}
 			}
 		}
-		
-		const result = await bcrypt.compare(data.password, user.password)
 
-		console.log(result)
-		if (!result){
-			console.log("Passwords do not match")
-			const {password, ...rest} = data;
-			return {
-				data: rest,
-				errors: {
-					invalid: "Invalid email or password"
-				}
-			}
-		}
-
-		const jwt = await createJWT({
-			first_name: user.first_name,
-			surname: user.surname,
-			email: user.email,
-			id: user.id,
-			role: user.role,
-		})
-
-		event.cookies.set("auth", jwt, {path: "/", secure: (DEV === 'false' ? true : false)})
-
-		throw redirect(301, "/")
+		throw redirect(302, "/")
 	}
 };
