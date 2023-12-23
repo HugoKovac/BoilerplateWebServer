@@ -9,13 +9,7 @@ export default defineConfig(({ mode }) => {
 	return {
 		plugins: [sveltekit(), purgeCss()],
 		server: {
-			proxy: {
-				'/dev': {
-					target: 'http://web_dev:3000',
-					changeOrigin: true,
-					rewrite: (path) => path.replace(/^\/dev/, ''),
-				},
-			}
+			
 		}
 	}
 });
