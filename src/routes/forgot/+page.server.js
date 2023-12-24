@@ -1,6 +1,6 @@
 import transporter from "$lib/emailSetup.server"
 import {GOOGLE_EMAIL, BASE_URL} from '$env/static/private'
-import { redirect } from "@sveltejs/kit"
+import { error, redirect } from "@sveltejs/kit"
 import {z} from "zod"
 import {db} from '$lib/server/prisma'
 import {generatePasswordResetToken} from "$lib/server/token"
@@ -54,14 +54,20 @@ export const actions = {
                     }
                 }
 
-                const reset_token = await generatePasswordResetToken(user.id);
+                const {token, exist} = await generatePasswordResetToken(user.id);
     
+                if (exist){
+                    return {
+                        error: "Email already sent"
+                    }
+                }
+
                 const message = {
                     from: GOOGLE_EMAIL,
                     to: user.email,
                     subject: "Reset your password",
                     body: "Reset your password",
-                    html: `<a href="${BASE_URL}/forgot/${reset_token}">Click here to reset your password</a>`
+                    html: `<a href="${BASE_URL}/forgot/${token}">Click here to reset your password</a>`
                 }
                 
                 const sendMail = async (message) => {

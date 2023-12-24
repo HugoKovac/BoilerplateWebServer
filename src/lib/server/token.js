@@ -71,7 +71,7 @@ export const generatePasswordResetToken = async (userId) => {
   );
 
   if (reusableStoredToken) {
-      return reusableStoredToken.id;
+      return {token: reusableStoredToken.id, exist: true};
   }
 
   // Generate a new token and save it to the database
@@ -84,7 +84,7 @@ export const generatePasswordResetToken = async (userId) => {
       },
   });
 
-  return token;
+  return {token, exist: false};
 };
 
 export const validatePasswordResetToken = async (token) => {
