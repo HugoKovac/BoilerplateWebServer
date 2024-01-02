@@ -1,5 +1,5 @@
 import transporter from "$lib/emailSetup.server"
-import {GOOGLE_EMAIL, BASE_URL} from '$env/static/private'
+import {SMTP_EMAIL, BASE_URL} from '$env/static/private'
 import { error, redirect } from "@sveltejs/kit"
 import {z} from "zod"
 import {db} from '$lib/server/prisma'
@@ -63,7 +63,7 @@ export const actions = {
                 }
 
                 const message = {
-                    from: GOOGLE_EMAIL,
+                    from: SMTP_EMAIL,
                     to: user.email,
                     subject: "Reset your password",
                     body: "Reset your password",

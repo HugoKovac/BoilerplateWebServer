@@ -1,5 +1,5 @@
 import transporter from "$lib/emailSetup.server"
-import { GOOGLE_EMAIL, BASE_URL } from '$env/static/private'
+import { SMTP_EMAIL, BASE_URL } from '$env/static/private'
 import { redirect } from "@sveltejs/kit"
 import { generateEmailVerificationToken } from "$lib/server/token"
 import { db } from "$lib/server/prisma"
@@ -29,7 +29,7 @@ export const actions = {
 
             if (!exist){
                 const message = {
-                    from: GOOGLE_EMAIL,
+                    from: SMTP_EMAIL,
                     to: session.user.email,
                     subject: "Verify your email",
                     body: "Verify your email",
