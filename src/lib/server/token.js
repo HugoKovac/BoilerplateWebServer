@@ -5,6 +5,7 @@ import { db } from '$lib/server/prisma'
 const EXPIRES_IN = 3600000; // 1 hour in milliseconds, adjust as needed
 
 export const generateEmailVerificationToken = async (userId) => {
+  console.log(`generateEmailVerificationToken for ${userId}`)
   // Retrieve all stored tokens for the user
   const storedUserTokens = await db.emailVerificationToken.findMany({
     where: { user_id: userId },
@@ -16,7 +17,7 @@ export const generateEmailVerificationToken = async (userId) => {
   );
 
   if (reusableStoredToken) {
-    return reusableStoredToken.id;
+    return {token: reusableStoredToken.id, exist: true};
   }
 
   // Generate a new token and save it to the database
@@ -29,7 +30,7 @@ export const generateEmailVerificationToken = async (userId) => {
     },
   });
 
-  return token;
+  return {token, exist: false};
 };
 
 
@@ -70,7 +71,7 @@ export const generatePasswordResetToken = async (userId) => {
   );
 
   if (reusableStoredToken) {
-      return reusableStoredToken.id;
+      return {token: reusableStoredToken.id, exist: true};
   }
 
   // Generate a new token and save it to the database
@@ -83,7 +84,7 @@ export const generatePasswordResetToken = async (userId) => {
       },
   });
 
-  return token;
+  return {token, exist: false};
 };
 
 export const validatePasswordResetToken = async (token) => {
