@@ -39,6 +39,7 @@ export const actions = {
 			}
 		}
 
+		let verify = false;
 		try{
 
 			const key = await auth.useKey("email", data.email.toLowerCase(), data.password)
@@ -48,7 +49,7 @@ export const actions = {
 			});
 			event.locals.auth.setSession(session);
 			if (session.user.email_verified === false){
-				throw redirect(303, '/verify')
+				verify = true;
 			}
 		}
 		catch (err){
@@ -60,6 +61,9 @@ export const actions = {
 					invalid: "Invalid email or password"
 				}
 			}
+		}
+		if (verify){
+			throw redirect(303, '/verify')
 		}
 
 		throw redirect(302, "/")
