@@ -150,10 +150,6 @@ export const actions = {
             user.email = data.email
         }
 
-        if (data.password){
-            user.password = await bcrypt.hash(data.password.toString(), 10)
-        }
-
         const new_user = await db.user.update({
             where: {
                 id: session.user.userId

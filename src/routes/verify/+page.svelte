@@ -10,10 +10,9 @@
     }
 
     $: if (form?.error || form?.success) {
-        console.log(form?.error);
         toastStore.trigger({
             message: form?.error || form?.success,
-            background: `variant-filled-${(form && form?.error ? "error" : "success")}`,
+            background: `variant-filled-${(form?.error ? "error" : "success")}`,
         });
     }
 </script>

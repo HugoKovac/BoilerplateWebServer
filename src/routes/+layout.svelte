@@ -84,16 +84,17 @@
 			</svelte:fragment>
 			<svelte:fragment slot="trail">
 				{#if data.avatar_letters}
-					<Avatar
+					<!-- <Avatar
 						initials={data.avatar_letters}
 						width="w-12"
+						heigth="h-12"
 						background="bg-primary-500"
 						border="border-4 border-surface-300-600-token hover:!border-primary-500"
 						cursor="cursor-pointer"
 						on:click={() => {
 							goto('/me');
 						}}
-					/>
+					/> -->
 					<button on:click={handleClick}>
 						<AlignLeft class="w-12 hover:opacity-75 hover:cursor-pointer" />
 					</button>

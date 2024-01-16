@@ -13,7 +13,7 @@
             message: form?.errors?.invalid,
             background: 'variant-filled-error',
         });
-    }
+    }j
 
     let passwordPolicyError = '';
     $: {
