@@ -37,4 +37,5 @@ export async function load({params, cookies, locals}){
 			"Set-Cookie": sessionCookie
 		}
 	});
+	// throw redirect(302, "/verify/redirect");
 }
