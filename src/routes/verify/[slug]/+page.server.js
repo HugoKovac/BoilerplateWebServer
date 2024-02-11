@@ -32,6 +32,8 @@ export async function load({params, cookies, locals}){
         console.error(err)
         throw redirect(303, "/login");
 	}
+
+
 	throw redirect(302, "/", {
 		headers: {
 			"Set-Cookie": sessionCookie
